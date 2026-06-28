@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پایش سرویس‌ها | Direct Debit</title>
+<style>
+  :root{
+    --bg: #0b0f10;
+    --panel: #12181a;
+    --panel-2: #161e20;
+    --line: #233032;
+    --text: #e7eeee;
+    --text-dim: #8aa0a2;
+    --mono: Tahoma, sans-serif;
+    --latin-mono: Tahoma, sans-serif;
+    --sans: Tahoma, sans-serif;
+
+    --stable: #2fd48a;
+    --stable-bg: rgba(47,212,138,0.08);
+    --unstable: #f0b429;
+    --unstable-bg: rgba(240,180,41,0.08);
+    --down: #f0473c;
+    --down-bg: rgba(240,71,60,0.08);
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .wrap{
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* ---------- HEADER ---------- */
+  header{
+    display:flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 18px;
+  }
+  .title-block h1{
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+  .title-block .sub{
+    font-family: var(--latin-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+    direction: ltr;
+    text-align: right;
+  }
+
+  .live-pill{
+    display:flex; align-items:center; gap:8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    padding: 6px 12px;
+    border-radius: 100px;
+  }
+  .live-dot{
+    width:7px; height:7px; border-radius:50%;
+    background: var(--stable);
+    box-shadow: 0 0 0 0 rgba(47,212,138,0.6);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse{
+    0%{ box-shadow: 0 0 0 0 rgba(47,212,138,0.5); }
+    70%{ box-shadow: 0 0 0 6px rgba(47,212,138,0); }
+    100%{ box-shadow: 0 0 0 0 rgba(47,212,138,0); }
+  }
+
+  /* ---------- SUMMARY BAR (signature element) ---------- */
+  .summary{
+    display:flex;
+    gap:2px;
+    height: 34px;
+    border-radius: 6px;
+    overflow:hidden;
+    margin-bottom: 18px;
+    border: 1px solid var(--line);
+  }
+  .summary-seg{
+    flex-grow: 1;
+    display:flex; align-items:center; justify-content:center;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: #04130c;
+    transition: flex-grow 0.4s ease;
+    min-width: 36px;
+    white-space: nowrap;
+    overflow:hidden;
+  }
+  .summary-seg.stable{ background: var(--stable); }
+  .summary-seg.unstable{ background: var(--unstable); }
+  .summary-seg.down{ background: var(--down); color:#fff; }
+  .summary-seg.empty{ background: var(--panel-2); color: var(--text-dim); flex-grow: 0.001; }
+
+  /* ---------- TOOLBAR ---------- */
+  .toolbar{
+    display:flex; gap:8px; flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .filter-btn{
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--text-dim);
+    padding: 7px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover{ border-color: #3a4d50; color: var(--text); }
+  .filter-btn.active{
+    background: var(--panel-2);
+    color: var(--text);
+    border-color: #3a4d50;
+  }
+  .filter-btn .count{ color: var(--text-dim); margin-right: 4px; }
+
+  .service-filter-group{
+    display:flex; gap:8px;
+    padding-right: 12px;
+    border-right: 1px solid var(--line);
+  }
+
+  .spacer{ flex-grow:1; }
+
+  .icon-btn{
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--text-dim);
+    padding: 7px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .icon-btn:hover{ color: var(--text); border-color: #3a4d50; }
+
+  /* ---------- TABLE ---------- */
+  .bulk-bar{
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    background: var(--panel-2);
+    border: 1px solid #3a4d50;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+  }
+  .bulk-bar .bulk-count{ font-weight:700; color: var(--text); }
+  .bulk-bar .bulk-label{ color: var(--text-dim); }
+  .bulk-bar .spacer{ flex-grow:1; }
+
+  .col-check{ width: 36px; text-align:center !important; }
+  .row-check{ width:15px; height:15px; cursor:pointer; accent-color: #3a4d50; }
+  #selectAllCheckbox{ width:15px; height:15px; cursor:pointer; accent-color: #3a4d50; }
+
+  .table-wrap{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  table{
+    width:100%;
+    border-collapse: collapse;
+  }
+  thead th{
+    text-align: right;
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel-2);
+  }
+  thead th.col-status{ text-align:center; }
+  tbody td{
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+    vertical-align: middle;
+  }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr:hover{ background: rgba(255,255,255,0.015); }
+
+  .bank-name{
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 13.5px;
+    display: block;
+  }
+  .bank-code{
+    font-family: var(--latin-mono);
+    font-size: 10.5px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+    direction: ltr;
+    text-align: right;
+    display:block;
+    margin-top: 2px;
+  }
+  .service-tag{
+    font-family: var(--latin-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    border: 1px solid var(--line);
+    padding: 2px 8px;
+    border-radius: 4px;
+    direction: ltr;
+    display: inline-block;
+  }
+
+  .status-pill{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family: var(--latin-mono);
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 5px;
+    direction: ltr;
+    white-space: nowrap;
+  }
+  .status-pill .dot{ width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+  .status-pill.stable{ background: var(--stable-bg); color: var(--stable); }
+  .status-pill.stable .dot{ background: var(--stable); }
+  .status-pill.unstable{ background: var(--unstable-bg); color: var(--unstable); }
+  .status-pill.unstable .dot{ background: var(--unstable); }
+  .status-pill.down{ background: var(--down-bg); color: var(--down); }
+  .status-pill.down .dot{ background: var(--down); }
+
+  .updated-cell{
+    font-family: var(--latin-mono);
+    font-size: 11.5px;
+    color: var(--text-dim);
+    direction: ltr;
+    text-align: right;
+    display:block;
+  }
+
+  .actions-cell{ text-align:center; }
+  .action-row{
+    display:inline-flex;
+    gap:0;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .action-btn{
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 5px 10px;
+    border: none;
+    border-left: 1px solid var(--line);
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-dim);
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+  .action-row [dir="rtl"] .action-btn,
+  html[dir="rtl"] .action-btn:first-child{ border-left: none; }
+  .action-btn:first-child{ border-left: none; }
+  .action-btn:hover:not(:disabled){ filter: brightness(1.2); }
+  .action-btn.to-stable:hover:not(:disabled){ background: var(--stable-bg); color: var(--stable); }
+  .action-btn.to-unstable:hover:not(:disabled){ background: var(--unstable-bg); color: var(--unstable); }
+  .action-btn.to-down:hover:not(:disabled){ background: var(--down-bg); color: var(--down); }
+  .action-btn.is-current{
+    cursor: default;
+    font-weight: 700;
+  }
+  .action-btn.is-current.to-stable{ background: var(--stable); color: #04130c; }
+  .action-btn.is-current.to-unstable{ background: var(--unstable); color: #1a1200; }
+  .action-btn.is-current.to-down{ background: var(--down); color: #fff; }
+  .action-btn.loading{ opacity: 0.5; cursor: wait; }
+  .action-btn:disabled:not(.is-current){ opacity:0.35; cursor: default; }
+
+  tr.row-flash{
+    animation: flash 1s ease;
+  }
+  @keyframes flash{
+    0%{ background: rgba(255,255,255,0.07); }
+    100%{ background: transparent; }
+  }
+
+  /* ---------- SETTINGS PANEL ---------- */
+  .settings-overlay{
+    position: fixed; inset:0;
+    background: rgba(0,0,0,0.6);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index: 50;
+    padding: 20px;
+  }
+  .settings-overlay.open{ display:flex; }
+  .settings-box{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px;
+    width: 100%;
+    max-width: 420px;
+  }
+  .settings-box h2{ font-size:15px; margin-bottom: 4px; }
+  .settings-box .desc{ font-size:12px; color: var(--text-dim); margin-bottom:16px; }
+  .field{ margin-bottom: 14px; }
+  .field label{
+    display:block; font-size: 11px; color: var(--text-dim);
+    margin-bottom: 6px; font-family: var(--mono);
+  }
+  .field input{
+    width:100%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 9px 10px;
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 12px;
+    direction: ltr;
+    text-align: right;
+  }
+  .field input:focus{ outline: none; border-color: #3a4d50; }
+  .settings-actions{ display:flex; gap:8px; margin-top:18px; }
+  .btn-primary, .btn-ghost{
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    flex-grow:1;
+    border: 1px solid transparent;
+  }
+  .btn-primary{ background: var(--text); color: #0b0f10; }
+  .btn-ghost{ background: transparent; color: var(--text-dim); border-color: var(--line); }
+
+  .history-item{
+    display:flex; align-items:center; gap:10px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  .history-item .h-bank{ font-weight:700; min-width:90px; font-family: var(--sans); }
+  .history-item .h-service{ color: var(--text-dim); font-family: var(--latin-mono); min-width:50px; }
+  .history-item .h-transition{ flex-grow:1; font-family: var(--latin-mono); font-size:11px; }
+  .history-item .h-time{ color: var(--text-dim); font-family: var(--latin-mono); font-size:10.5px; white-space:nowrap; }
+  .history-empty{ text-align:center; padding:30px; color: var(--text-dim); font-size:12.5px; }
+
+  /* ---------- TOAST ---------- */
+  .toast{
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s ease;
+    z-index: 60;
+    display:flex; align-items:center; gap:8px;
+  }
+  .toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+  .toast .dot{ width:7px; height:7px; border-radius:50%; }
+  .toast.ok .dot{ background: var(--stable); }
+  .toast.err .dot{ background: var(--down); }
+
+  footer{
+    margin-top: 16px;
+    text-align:center;
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+  }
+
+  @media (max-width: 700px){
+    thead th:nth-child(4), tbody td:nth-child(4){ display:none; }
+    .bank-code{ font-size:12px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .live-dot{ animation:none; }
+    tr.row-flash{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <div class="title-block">
+      <h1>پایش وضعیت سرویس‌های بانکی</h1>
+      <div class="sub">PAY · CREATE — health/service monitor</div>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <div class="live-pill"><span class="live-dot"></span><span id="lastSync">به‌روز</span></div>
+    </div>
+  </header>
+
+  <div class="summary" id="summaryBar"></div>
+
+  <div class="toolbar">
+    <button class="filter-btn active" data-filter="all">همه <span class="count" id="cnt-all">0</span></button>
+    <button class="filter-btn" data-filter="Stable">Stable <span class="count" id="cnt-stable">0</span></button>
+    <button class="filter-btn" data-filter="Unstable">unStable <span class="count" id="cnt-unstable">0</span></button>
+    <button class="filter-btn" data-filter="Inaccessible">Inaccessible <span class="count" id="cnt-down">0</span></button>
+    <div class="service-filter-group">
+      <button class="filter-btn active" data-svc-filter="all">همه سرویس‌ها</button>
+      <button class="filter-btn" data-svc-filter="Pay">Pay</button>
+      <button class="filter-btn" data-svc-filter="Create">Create</button>
+    </div>
+    <div class="spacer"></div>
+    <button class="icon-btn" id="refreshBtn" title="وضعیت واقعی همه‌ی سرویس‌ها رو از سرور می‌گیره">↻ رفرش وضعیت</button>
+    <button class="icon-btn" id="importBtn" title="اگه جای دیگه‌ای (مثل Postman) وضعیت رو عوض کردی، خروجی جدید رو اینجا وارد کن">⇪ وارد کردن آخرین وضعیت</button>
+    <button class="icon-btn" id="historyBtn" title="تاریخچه‌ی همه‌ی تغییرات وضعیت">🕒 تاریخچه</button>
+    <button class="icon-btn" id="settingsBtn">⚙ تنظیمات اتصال</button>
+  </div>
+
+  <div class="bulk-bar" id="bulkBar" style="display:none;">
+    <span class="bulk-count" id="bulkCount">0 مورد انتخاب شده</span>
+    <span class="bulk-label">تغییر همه به:</span>
+    <div class="action-row">
+      <button class="action-btn to-stable" id="bulkToStable">Stable</button>
+      <button class="action-btn to-unstable" id="bulkToUnstable">unStable</button>
+      <button class="action-btn to-down" id="bulkToDown">Inaccessible</button>
+    </div>
+    <button class="icon-btn" id="bulkClear">لغو انتخاب</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-check"><input type="checkbox" id="selectAllCheckbox"></th>
+          <th>بانک</th>
+          <th>سرویس</th>
+          <th class="col-status">وضعیت</th>
+          <th>آخرین به‌روزرسانی</th>
+          <th class="actions-cell">تغییر وضعیت</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <footer>برای استفاده‌ی شخصی — accessCode و Cookie به‌صورت محلی در همین صفحه ذخیره می‌شن</footer>
+</div>
+
+<!-- Settings overlay -->
+<div class="settings-overlay" id="settingsOverlay">
+  <div class="settings-box">
+    <h2>تنظیمات اتصال به API</h2>
+    <div class="desc">این مقادیر برای فراخوانی واقعی اندپوینت تغییر وضعیت لازمن.</div>
+    <div class="field">
+      <label>Base URL (تغییر وضعیت — POST)</label>
+      <input type="text" id="cfgBaseUrl" placeholder="https://your-provider.example.com/v1/health/service">
+    </div>
+    <div class="field">
+      <label>Status All URL (گرفتن وضعیت واقعی — GET)</label>
+      <input type="text" id="cfgStatusAllUrl" placeholder="https://your-provider.example.com/v1/health/service/all">
+    </div>
+    <div class="field">
+      <label>accessCode</label>
+      <input type="text" id="cfgAccessCode" placeholder="your-access-code...">
+    </div>
+    <div class="field">
+      <label>Cookie</label>
+      <input type="text" id="cfgCookie" placeholder="your-cookie-value...">
+    </div>
+    <div class="field">
+      <label>نام بانک‌ها (قابل ویرایش — حدسی هستن، اگه اشتباهن اصلاح کن)</label>
+      <textarea id="cfgBankNames" rows="6" style="width:100%; background:var(--bg); border:1px solid var(--line); color:var(--text); padding:9px 10px; border-radius:6px; font-family:var(--latin-mono); font-size:11px; direction:ltr; text-align:left; resize:vertical;"></textarea>
+    </div>
+    <div class="settings-actions">
+      <button class="btn-ghost" id="cancelSettings">انصراف</button>
+      <button class="btn-primary" id="saveSettings">ذخیره</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import-snapshot overlay -->
+<div class="settings-overlay" id="importOverlay">
+  <div class="settings-box">
+    <h2>وارد کردن آخرین وضعیت</h2>
+    <div class="desc">
+      چون این برنامه endpoint برای خوندن وضعیت واقعی سرور نداره (فقط POST برای تغییر داریم)،
+      اگه جای دیگه‌ای (مثل Postman یا یه ابزار دیگه) وضعیت رو عوض کردی، خروجی JSON رو
+      اینجا کپی/پیست کن تا جدول با وضعیت واقعی هماهنگ شه. فرمت باید مثل نمونه‌ای باشه که
+      قبلاً فرستادی (آرایه‌ای با bank، service، status، last_updated).
+    </div>
+    <div class="field">
+      <textarea id="importTextarea" rows="10" placeholder='[{"bank":"SINAIR","service":"Pay","status":"Stable","last_updated":"..."}, ...]' style="width:100%; background:var(--bg); border:1px solid var(--line); color:var(--text); padding:9px 10px; border-radius:6px; font-family:var(--latin-mono); font-size:11px; direction:ltr; text-align:left; resize:vertical;"></textarea>
+    </div>
+    <div class="settings-actions">
+      <button class="btn-ghost" id="cancelImport">انصراف</button>
+      <button class="btn-primary" id="confirmImport">اعمال</button>
+    </div>
+  </div>
+</div>
+
+<!-- History overlay -->
+<div class="settings-overlay" id="historyOverlay">
+  <div class="settings-box" style="max-width: 600px;">
+    <h2>تاریخچه‌ی تغییرات وضعیت</h2>
+    <div class="desc">این تاریخچه روی همین مرورگر/کامپیوتر ذخیره می‌شه و با بستن یا رفرش صفحه پاک نمی‌شه.</div>
+    <div id="historyList" style="max-height: 420px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
+    <div class="settings-actions">
+      <button class="btn-ghost" id="clearHistoryBtn">پاک کردن تاریخچه</button>
+      <button class="btn-primary" id="closeHistory">بستن</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span class="dot"></span><span id="toastMsg"></span></div>
+
+<script>
+/* ============ CONFIG (defaults — override via Settings panel) ============ */
+const DEFAULT_CONFIG = {
+  baseUrl: "http://127.0.0.1:2080/v1/health/service",
+  statusAllUrl: "http://127.0.0.1:2080/v1/health/service/all", // GET — برمی‌گردونه وضعیت واقعی همه‌ی بانک‌ها/سرویس‌ها
+  accessCode: "", // از تنظیمات (⚙) وارد کن
+  cookie: "" // از تنظیمات (⚙) وارد کن
+};
+
+function loadConfig(){
+  try{
+    const raw = sessionStorage_fallback.get('ddmon_config');
+    return raw ? JSON.parse(raw) : {...DEFAULT_CONFIG};
+  }catch(e){ return {...DEFAULT_CONFIG}; }
+}
+function saveConfig(cfg){
+  sessionStorage_fallback.set('ddmon_config', JSON.stringify(cfg));
+}
+
+/* In-memory fallback store (artifacts cannot use real localStorage/sessionStorage) */
+const sessionStorage_fallback = {
+  _mem: {},
+  get(k){ return this._mem[k]; },
+  set(k,v){ this._mem[k] = v; }
+};
+
+let CONFIG = loadConfig();
+
+/* ============ PERSISTENT HISTORY (IndexedDB) ============
+   IndexedDB یه پایگاه‌داده‌ی محلیه که خودِ مرورگرت داره (مثل localStorage ولی
+   قوی‌تر و بدون محدودیت محیط Artifact)؛ روی دیسک کامپیوترت می‌مونه حتی بعد
+   از بستن/رفرش صفحه. هیچ نصب یا تنظیم اضافه‌ای لازم نداره. */
+const HISTORY_DB_NAME = "ddmon_history_db";
+const HISTORY_STORE = "changes";
+let _historyDbPromise = null;
+
+function openHistoryDb(){
+  if(_historyDbPromise) return _historyDbPromise;
+  _historyDbPromise = new Promise((resolve, reject) => {
+    if(!window.indexedDB){
+      reject(new Error("IndexedDB در این مرورگر در دسترس نیست"));
+      return;
+    }
+    const req = indexedDB.open(HISTORY_DB_NAME, 1);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains(HISTORY_STORE)){
+        const store = db.createObjectStore(HISTORY_STORE, { keyPath: "id", autoIncrement: true });
+        store.createIndex("at", "at");
+      }
+    };
+    req.onsuccess = (e) => resolve(e.target.result);
+    req.onerror = (e) => reject(e.target.error);
+  });
+  return _historyDbPromise;
+}
+
+async function logHistory(entry){
+  try{
+    const db = await openHistoryDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(HISTORY_STORE, "readwrite");
+      tx.objectStore(HISTORY_STORE).add(entry);
+      tx.oncomplete = () => resolve();
+      tx.onerror = (e) => reject(e.target.error);
+    });
+  }catch(e){
+    console.warn("History logging failed:", e);
+  }
+}
+
+async function getAllHistory(){
+  try{
+    const db = await openHistoryDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(HISTORY_STORE, "readonly");
+      const req = tx.objectStore(HISTORY_STORE).getAll();
+      req.onsuccess = () => resolve(req.result.sort((a,b) => new Date(b.at) - new Date(a.at)));
+      req.onerror = (e) => reject(e.target.error);
+    });
+  }catch(e){
+    return [];
+  }
+}
+
+async function clearHistory(){
+  try{
+    const db = await openHistoryDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(HISTORY_STORE, "readwrite");
+      tx.objectStore(HISTORY_STORE).clear();
+      tx.oncomplete = () => resolve();
+      tx.onerror = (e) => reject(e.target.error);
+    });
+  }catch(e){}
+}
+
+/* ============ FIXED BANK LIST (as provided) ============ */
+const BANKS = [
+  "MEHRIR","MELIIR","DAYBIR","SRMBIR","PBIRIR","BKMTIR","CIYBIR","BEGNIR",
+  "SABCIR","IRZAIR","SEPBIR","BLUBIR","SINAIR","KESHIR","BTEJIR","BKPAIR","REFAIR"
+];
+const SERVICES = ["Pay","Create"];
+
+/* ============ BANK NAMES (تأییدشده توسط کاربر) ============ */
+const DEFAULT_BANK_NAMES = {
+  "MEHRIR": "بانک مهر ایران",
+  "MELIIR": "بانک ملی ایران",
+  "DAYBIR": "بانک دی",
+  "SRMBIR": "بانک سرمایه",
+  "PBIRIR": "پست بانک ایران",
+  "BKMTIR": "بانک ملت",
+  "CIYBIR": "بانک شهر",
+  "BEGNIR": "بانک اقتصاد نوین",
+  "SABCIR": "بانک سامان",
+  "IRZAIR": "بانک ایران زمین",
+  "SEPBIR": "بانک سپه",
+  "BLUBIR": "بلو بانک",
+  "SINAIR": "بانک سینا",
+  "KESHIR": "بانک کشاورزی",
+  "BTEJIR": "بانک تجارت",
+  "BKPAIR": "بانک پارسیان",
+  "REFAIR": "بانک رفاه کارگران"
+};
+
+function loadBankNames(){
+  try{
+    const raw = sessionStorage_fallback.get('ddmon_bank_names');
+    return raw ? JSON.parse(raw) : {...DEFAULT_BANK_NAMES};
+  }catch(e){ return {...DEFAULT_BANK_NAMES}; }
+}
+function saveBankNames(map){
+  sessionStorage_fallback.set('ddmon_bank_names', JSON.stringify(map));
+}
+let BANK_NAMES = loadBankNames();
+function bankName(code){
+  return BANK_NAMES[code] || code;
+}
+
+/* ============ SEED DATA (from the sample the user provided) ============ */
+const SEED = [
+  {bank:"MEHRIR",service:"Pay",status:"Stable",last_updated:"2026-06-23T18:55:46.5378746+03:30"},
+  {bank:"MEHRIR",service:"Create",status:"Stable",last_updated:"2026-06-07T21:14:27.583486+03:30"},
+  {bank:"MELIIR",service:"Pay",status:"Inaccessible",last_updated:"2026-06-23T15:50:09.4357676+03:30"},
+  {bank:"MELIIR",service:"Create",status:"Inaccessible",last_updated:"2026-06-13T15:04:23.1264218+03:30"},
+  {bank:"DAYBIR",service:"Pay",status:"Stable",last_updated:"2026-06-23T17:48:12.61123+03:30"},
+  {bank:"DAYBIR",service:"Create",status:"Stable",last_updated:"2026-06-16T16:23:39.2974039+03:30"},
+  {bank:"SRMBIR",service:"Pay",status:"Stable",last_updated:"2026-06-23T17:48:50.5512284+03:30"},
+  {bank:"SRMBIR",service:"Create",status:"Stable",last_updated:"2026-06-07T21:14:15.9019078+03:30"},
+  {bank:"PBIRIR",service:"Pay",status:"Stable",last_updated:"2026-06-23T17:48:37.3481964+03:30"},
+  {bank:"PBIRIR",service:"Create",status:"Stable",last_updated:"2026-06-07T21:14:11.7412188+03:30"},
+  {bank:"BKMTIR",service:"Pay",status:"Stable",last_updated:"2026-06-23T17:41:44.1229356+03:30"},
+  {bank:"BKMTIR",service:"Create",status:"Stable",last_updated:"2026-06-07T21:14:46.8663073+03:30"},
+  {bank:"CIYBIR",service:"Pay",status:"Stable",last_updated:"2026-06-06T15:45:26.4908574+03:30"},
+  {bank:"CIYBIR",service:"Create",status:"Stable",last_updated:"2026-06-24T15:55:06.3540951+03:30"},
+  {bank:"BEGNIR",service:"Pay",status:"Stable",last_updated:"2026-06-23T17:48:07.7959372+03:30"},
+  {bank:"BEGNIR",service:"Create",status:"Stable",last_updated:"2026-06-07T21:14:30.9510551+03:30"},
+  {bank:"SABCIR",service:"Pay",status:"Stable",last_updated:"2026-06-23T17:48:42.998289+03:30"},
+  {bank:"SABCIR",service:"Create",status:"Stable",last_updated:"2026-06-07T21:14:34.5903718+03:30"},
+  {bank:"IRZAIR",service:"Pay",status:"Stable",last_updated:"2026-06-23T17:31:39.9635684+03:30"},
+  {bank:"IRZAIR",service:"Create",status:"Stable",last_updated:"2026-06-07T21:14:20.975706+03:30"},
+  {bank:"SEPBIR",service:"Pay",status:"Stable",last_updated:"2025-10-22T18:16:44.4562893+03:30"},
+  {bank:"SEPBIR",service:"Create",status:"Stable",last_updated:"2026-06-06T15:44:10.572549+03:30"},
+  {bank:"BLUBIR",service:"Pay",status:"Stable",last_updated:"2026-06-10T18:07:49.8098023+03:30"},
+  {bank:"BLUBIR",service:"Create",status:"Unstable",last_updated:"2026-06-20T21:02:50.1857464+03:30"},
+  {bank:"SINAIR",service:"Pay",status:"Stable",last_updated:"2026-06-23T17:31:44.4216801+03:30"},
+  {bank:"SINAIR",service:"Create",status:"Stable",last_updated:"2026-06-07T21:14:38.1970494+03:30"},
+  {bank:"KESHIR",service:"Pay",status:"Stable",last_updated:"2026-06-23T17:48:22.1704993+03:30"},
+  {bank:"KESHIR",service:"Create",status:"Stable",last_updated:"2026-06-23T19:19:24.9614015+03:30"},
+  {bank:"BTEJIR",service:"Pay",status:"Inaccessible",last_updated:"2026-06-22T19:30:27.5795845+03:30"},
+  {bank:"BTEJIR",service:"Create",status:"Inaccessible",last_updated:"2026-06-21T15:34:47.4999042+03:30"},
+  {bank:"BKPAIR",service:"Pay",status:"Stable",last_updated:"2026-06-24T15:55:06.3541069+03:30"},
+  {bank:"BKPAIR",service:"Create",status:"Stable",last_updated:"2026-01-05T13:01:31.7104655+03:30"},
+  {bank:"REFAIR",service:"Pay",status:"Inaccessible",last_updated:"2026-06-23T14:27:16.7375426+03:30"},
+  {bank:"REFAIR",service:"Create",status:"Inaccessible",last_updated:"2026-06-23T14:27:12.409575+03:30"}
+];
+
+/* ============ STATE ============ */
+// state[bank][service] = {status, last_updated}
+let state = {};
+BANKS.forEach(b => { state[b] = {}; SERVICES.forEach(s => state[b][s] = {status:"Stable", last_updated: new Date().toISOString()}); });
+SEED.forEach(row => { if(state[row.bank]) state[row.bank][row.service] = {status: row.status, last_updated: row.last_updated}; });
+
+let currentFilter = "all";
+let serviceFilter = "all";
+const selectedRows = new Set(); // keys like "SINAIR|Pay"
+
+/* ============ HELPERS ============ */
+function statusClass(s){
+  if(s === "Stable") return "stable";
+  if(s === "Unstable") return "unstable";
+  return "down"; // Inaccessible
+}
+function statusLabel(s){
+  if(s === "Stable") return "Stable";
+  if(s === "Unstable") return "unStable";
+  return "Inaccessible";
+}
+function relTime(iso){
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return "—";
+  const now = new Date();
+  let diffSec = Math.floor((now - d) / 1000);
+  if(diffSec < 0) diffSec = 0;
+  if(diffSec < 60) return "همین الان";
+  const min = Math.floor(diffSec/60);
+  if(min < 60) return `${min} دقیقه پیش`;
+  const hr = Math.floor(min/60);
+  if(hr < 24) return `${hr} ساعت پیش`;
+  const day = Math.floor(hr/24);
+  if(day < 30) return `${day} روز پیش`;
+  const mo = Math.floor(day/30);
+  return `${mo} ماه پیش`;
+}
+
+function showToast(msg, ok=true){
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.remove('ok','err');
+  t.classList.add(ok ? 'ok' : 'err');
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=> t.classList.remove('show'), 2600);
+}
+
+/* ============ RENDER ============ */
+function buildRows(){
+  const rows = [];
+  BANKS.forEach(bank => {
+    SERVICES.forEach(service => {
+      const entry = state[bank][service];
+      rows.push({bank, service, ...entry});
+    });
+  });
+  return rows;
+}
+
+function renderSummary(rows){
+  const counts = {Stable:0, Unstable:0, Inaccessible:0};
+  rows.forEach(r => counts[r.status] = (counts[r.status]||0) + 1);
+  const bar = document.getElementById('summaryBar');
+  bar.innerHTML = "";
+  const total = rows.length;
+  [
+    {key:"Stable", cls:"stable", label:"Stable"},
+    {key:"Unstable", cls:"unstable", label:"unStable"},
+    {key:"Inaccessible", cls:"down", label:"Inaccessible"}
+  ].forEach(({key,cls,label}) => {
+    const c = counts[key] || 0;
+    const seg = document.createElement('div');
+    if(c === 0){
+      seg.className = "summary-seg empty";
+    } else {
+      seg.className = "summary-seg " + cls;
+      seg.style.flexGrow = c;
+      seg.textContent = `${label} ${c}`;
+    }
+    bar.appendChild(seg);
+  });
+
+  document.getElementById('cnt-all').textContent = total;
+  document.getElementById('cnt-stable').textContent = counts.Stable || 0;
+  document.getElementById('cnt-unstable').textContent = counts.Unstable || 0;
+  document.getElementById('cnt-down').textContent = counts.Inaccessible || 0;
+}
+
+function renderTable(){
+  const rows = buildRows();
+  renderSummary(rows);
+
+  let filtered = currentFilter === "all" ? rows : rows.filter(r => r.status === currentFilter);
+  if(serviceFilter !== "all"){
+    filtered = filtered.filter(r => r.service === serviceFilter);
+  }
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = "";
+
+  if(filtered.length === 0){
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-dim); font-family:var(--mono); font-size:12px;">موردی با این فیلتر یافت نشد</td></tr>`;
+    updateBulkBar();
+    return;
+  }
+
+  filtered.forEach(r => {
+    const tr = document.createElement('tr');
+    const rowKey = `${r.bank}|${r.service}`;
+    tr.dataset.bank = r.bank;
+    tr.dataset.service = r.service;
+    tr.dataset.rowkey = rowKey;
+
+    const cls = statusClass(r.status);
+    const targets = [
+      {key:"Stable", label:"Stable", cls:"to-stable"},
+      {key:"Unstable", label:"unStable", cls:"to-unstable"},
+      {key:"Inaccessible", label:"Inaccessible", cls:"to-down"}
+    ];
+    const isChecked = selectedRows.has(rowKey);
+
+    tr.innerHTML = `
+      <td class="col-check"><input type="checkbox" class="row-check" ${isChecked ? "checked" : ""}></td>
+      <td>
+        <span class="bank-name">${bankName(r.bank)}</span>
+        <span class="bank-code">${r.bank}</span>
+      </td>
+      <td><span class="service-tag">${r.service}</span></td>
+      <td class="col-status" style="text-align:center;">
+        <span class="status-pill ${cls}"><span class="dot"></span>${statusLabel(r.status)}</span>
+      </td>
+      <td><span class="updated-cell" title="${r.last_updated}">${relTime(r.last_updated)}</span></td>
+      <td class="actions-cell">
+        <div class="action-row">
+          ${targets.map(t => {
+            const isCurrent = t.key === r.status;
+            return `<button class="action-btn ${t.cls}${isCurrent ? " is-current" : ""}" data-target="${t.key}" ${isCurrent ? "disabled" : ""}>${t.label}</button>`;
+          }).join("")}
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // bind action buttons (single-row change)
+  tbody.querySelectorAll('.action-btn').forEach(btn => {
+    btn.addEventListener('click', onChangeStatus);
+  });
+
+  // bind row checkboxes
+  tbody.querySelectorAll('.row-check').forEach(cb => {
+    cb.addEventListener('change', (e) => {
+      const tr = e.target.closest('tr');
+      const key = tr.dataset.rowkey;
+      if(e.target.checked) selectedRows.add(key);
+      else selectedRows.delete(key);
+      updateBulkBar();
+      updateSelectAllState(filtered);
+    });
+  });
+
+  updateBulkBar();
+  updateSelectAllState(filtered);
+}
+
+function updateSelectAllState(filtered){
+  const selectAllCb = document.getElementById('selectAllCheckbox');
+  const visibleKeys = filtered.map(r => `${r.bank}|${r.service}`);
+  const allSelected = visibleKeys.length > 0 && visibleKeys.every(k => selectedRows.has(k));
+  selectAllCb.checked = allSelected;
+}
+
+function updateBulkBar(){
+  const bar = document.getElementById('bulkBar');
+  const count = selectedRows.size;
+  if(count === 0){
+    bar.style.display = "none";
+  } else {
+    bar.style.display = "flex";
+    document.getElementById('bulkCount').textContent = `${count} مورد انتخاب شده`;
+  }
+}
+
+/* ============ STATUS CHANGE (real API call) — shared core ============ */
+async function changeStatus(bank, service, targetStatus){
+  const previousStatus = state[bank] && state[bank][service] ? state[bank][service].status : null;
+
+  let res;
+  try{
+    res = await fetch(CONFIG.baseUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "accessCode": CONFIG.accessCode,
+        "Cookie": CONFIG.cookie
+      },
+      body: JSON.stringify({
+        bank_code: bank,
+        service_name: service,
+        quality: targetStatus
+      })
+    });
+  }catch(networkErr){
+    throw new Error("درخواست توسط مرورگر بلاک شد (به‌احتمال زیاد CORS) — جزئیات را در Console مرورگر (F12) ببین");
+  }
+
+  if(!res.ok){
+    let bodyText = "";
+    try{ bodyText = await res.text(); }catch(_){}
+    throw new Error(`HTTP ${res.status}${bodyText ? " — " + bodyText.slice(0,200) : ""}`);
+  }
+
+  const now = new Date().toISOString();
+  state[bank][service] = { status: targetStatus, last_updated: now };
+
+  // لاگ توی تاریخچه‌ی دائمی (IndexedDB) — خطای ذخیره‌سازی هیچ‌وقت نباید جریان اصلی رو متوقف کند
+  logHistory({ bank, service, from: previousStatus, to: targetStatus, at: now }).catch(()=>{});
+
+  return now;
+}
+
+async function onChangeStatus(e){
+  const btn = e.currentTarget;
+  const tr = btn.closest('tr');
+  const bank = tr.dataset.bank;
+  const service = tr.dataset.service;
+  const targetStatus = btn.dataset.target;
+
+  const rowButtons = tr.querySelectorAll('.action-btn');
+  rowButtons.forEach(b => b.disabled = true);
+  btn.classList.add('loading');
+  const originalText = btn.textContent;
+  btn.textContent = "در حال ارسال...";
+
+  try{
+    await changeStatus(bank, service, targetStatus);
+    renderTable();
+
+    requestAnimationFrame(()=>{
+      const newTr = document.querySelector(`tr[data-bank="${bank}"][data-service="${service}"]`);
+      if(newTr){ newTr.classList.add('row-flash'); setTimeout(()=> newTr.classList.remove('row-flash'), 1000); }
+    });
+
+    showToast(`${bank} / ${service} → ${statusLabel(targetStatus)} ثبت شد`, true);
+  }catch(err){
+    showToast(`خطا در ارسال درخواست: ${err.message}`, false);
+    renderTable();
+  }
+}
+
+/* ============ BULK STATUS CHANGE ============
+   چون سرور فقط یه درخواست در هر بار قبول می‌کنه، اینجا تک‌تک (sequential)
+   درخواست‌ها رو می‌فرستیم، اما از نظر کاربر یه دستور واحده. اگه یکی خطا بده،
+   بقیه ادامه پیدا می‌کنن و خطا توی toast/تاریخچه مشخص می‌شه. */
+async function bulkChangeStatus(targetStatus){
+  if(selectedRows.size === 0) return;
+
+  const keys = Array.from(selectedRows);
+  const bulkBtns = document.querySelectorAll('#bulkBar .action-btn');
+  bulkBtns.forEach(b => b.disabled = true);
+
+  let success = 0, failed = 0;
+  for(const key of keys){
+    const [bank, service] = key.split("|");
+    // اگه وضعیت فعلی همون مقصد بود، رد شو (دکمه‌ها اصلاً disabled هستن، ولی برای bulk هم چک می‌کنیم)
+    if(state[bank] && state[bank][service] && state[bank][service].status === targetStatus){
+      continue;
+    }
+    try{
+      await changeStatus(bank, service, targetStatus);
+      success++;
+    }catch(err){
+      failed++;
+      showToast(`خطا برای ${bank} / ${service}: ${err.message}`, false);
+    }
+    renderTable(); // نمایش پیشرفت ردیف‌به‌ردیف
+  }
+
+  selectedRows.clear();
+  bulkBtns.forEach(b => b.disabled = false);
+  renderTable();
+  showToast(`${success} مورد موفق${failed ? ` — ${failed} مورد ناموفق` : ""}`, failed === 0);
+}
+
+document.getElementById('bulkToStable').addEventListener('click', () => bulkChangeStatus("Stable"));
+document.getElementById('bulkToUnstable').addEventListener('click', () => bulkChangeStatus("Unstable"));
+document.getElementById('bulkToDown').addEventListener('click', () => bulkChangeStatus("Inaccessible"));
+document.getElementById('bulkClear').addEventListener('click', () => {
+  selectedRows.clear();
+  renderTable();
+});
+
+document.getElementById('selectAllCheckbox').addEventListener('change', (e) => {
+  const rows = buildRows();
+  let filtered = currentFilter === "all" ? rows : rows.filter(r => r.status === currentFilter);
+  if(serviceFilter !== "all"){
+    filtered = filtered.filter(r => r.service === serviceFilter);
+  }
+  if(e.target.checked){
+    filtered.forEach(r => selectedRows.add(`${r.bank}|${r.service}`));
+  } else {
+    filtered.forEach(r => selectedRows.delete(`${r.bank}|${r.service}`));
+  }
+  renderTable();
+});
+
+/* ============ FILTERS (status) ============ */
+document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn[data-filter]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    renderTable();
+  });
+});
+
+/* ============ FILTERS (service) ============ */
+document.querySelectorAll('.filter-btn[data-svc-filter]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn[data-svc-filter]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    serviceFilter = btn.dataset.svcFilter;
+    renderTable();
+  });
+});
+
+/* ============ REAL REFRESH (calls GET /v1/health/service/all) ============ */
+async function syncRealStatus(){
+  const btn = document.getElementById('refreshBtn');
+  const syncLabel = document.getElementById('lastSync');
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = "↻ در حال دریافت...";
+  syncLabel.textContent = "در حال دریافت وضعیت واقعی...";
+
+  try{
+    let res;
+    try{
+      res = await fetch(CONFIG.statusAllUrl, {
+        method: "GET",
+        headers: {
+          "accessCode": CONFIG.accessCode
+        }
+      });
+    }catch(networkErr){
+      throw new Error("درخواست توسط مرورگر بلاک شد (به‌احتمال زیاد CORS) — از همون پروکسی محلی برای این آدرس هم استفاده کن");
+    }
+
+    if(!res.ok){
+      let bodyText = "";
+      try{ bodyText = await res.text(); }catch(_){}
+      throw new Error(`HTTP ${res.status}${bodyText ? " — " + bodyText.slice(0,200) : ""}`);
+    }
+
+    const data = await res.json();
+    if(!Array.isArray(data)) throw new Error("پاسخ سرور آرایه نبود");
+
+    let updated = 0;
+    data.forEach(row => {
+      const bank = row.bank || row.bank_code;
+      const service = row.service || row.service_name;
+      const status = row.status || row.quality;
+      if(bank && service && state[bank] && state[bank][service] && status){
+        state[bank][service] = { status, last_updated: row.last_updated || new Date().toISOString() };
+        updated++;
+      }
+    });
+
+    renderTable();
+    syncLabel.textContent = "به‌روز";
+    showToast(`وضعیت واقعی دریافت شد — ${updated} مورد به‌روزرسانی شد`, true);
+  }catch(err){
+    syncLabel.textContent = "خطا در دریافت";
+    showToast(`خطا در دریافت وضعیت: ${err.message}`, false);
+    setTimeout(()=> syncLabel.textContent = "به‌روز", 3000);
+  }finally{
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
+
+document.getElementById('refreshBtn').addEventListener('click', syncRealStatus);
+
+// آپدیت خودکار زمان‌های نسبی (هر ۳۰ ثانیه) — مستقل از رفرش واقعی
+setInterval(renderTable, 30000);
+
+/* ============ SETTINGS PANEL ============ */
+const overlay = document.getElementById('settingsOverlay');
+function openSettings(){
+  document.getElementById('cfgBaseUrl').value = CONFIG.baseUrl || "";
+  document.getElementById('cfgStatusAllUrl').value = CONFIG.statusAllUrl || "";
+  document.getElementById('cfgAccessCode').value = CONFIG.accessCode || "";
+  document.getElementById('cfgCookie').value = CONFIG.cookie || "";
+  document.getElementById('cfgBankNames').value = JSON.stringify(BANK_NAMES, null, 2);
+  overlay.classList.add('open');
+}
+document.getElementById('settingsBtn').addEventListener('click', openSettings);
+document.getElementById('cancelSettings').addEventListener('click', () => overlay.classList.remove('open'));
+overlay.addEventListener('click', (e) => { if(e.target === overlay) overlay.classList.remove('open'); });
+
+document.getElementById('saveSettings').addEventListener('click', () => {
+  CONFIG = {
+    baseUrl: document.getElementById('cfgBaseUrl').value.trim() || DEFAULT_CONFIG.baseUrl,
+    statusAllUrl: document.getElementById('cfgStatusAllUrl').value.trim() || DEFAULT_CONFIG.statusAllUrl,
+    accessCode: document.getElementById('cfgAccessCode').value.trim(),
+    cookie: document.getElementById('cfgCookie').value.trim()
+  };
+  saveConfig(CONFIG);
+
+  try{
+    const parsed = JSON.parse(document.getElementById('cfgBankNames').value);
+    BANK_NAMES = parsed;
+    saveBankNames(BANK_NAMES);
+  }catch(e){
+    showToast("فرمت JSON نام بانک‌ها اشتباهه — همون نسخه‌ی قبلی نگه داشته شد", false);
+    overlay.classList.remove('open');
+    return;
+  }
+
+  overlay.classList.remove('open');
+  renderTable();
+  showToast("تنظیمات ذخیره شد", true);
+});
+
+// Open settings automatically once if credentials look incomplete
+if(!CONFIG.accessCode || CONFIG.accessCode.length < 10){
+  setTimeout(openSettings, 400);
+}
+
+/* ============ IMPORT LATEST SNAPSHOT ============
+   چون endpoint برای خوندن وضعیت واقعی سرور نداریم، این بخش راه میانبر رو فراهم
+   می‌کنه: اگه از جای دیگه‌ای (Postman و غیره) وضعیت رو عوض کردی، می‌تونی خروجی
+   JSON رو اینجا پیست کنی تا جدول local هم باهاش هماهنگ شه. */
+const importOverlay = document.getElementById('importOverlay');
+document.getElementById('importBtn').addEventListener('click', () => {
+  document.getElementById('importTextarea').value = "";
+  importOverlay.classList.add('open');
+});
+document.getElementById('cancelImport').addEventListener('click', () => importOverlay.classList.remove('open'));
+importOverlay.addEventListener('click', (e) => { if(e.target === importOverlay) importOverlay.classList.remove('open'); });
+
+document.getElementById('confirmImport').addEventListener('click', () => {
+  const raw = document.getElementById('importTextarea').value.trim();
+  if(!raw){ showToast("چیزی پیست نشده", false); return; }
+
+  let data;
+  try{
+    data = JSON.parse(raw);
+    if(!Array.isArray(data)) throw new Error("not an array");
+  }catch(e){
+    showToast("فرمت JSON معتبر نیست", false);
+    return;
+  }
+
+  let updated = 0, skipped = 0;
+  data.forEach(row => {
+    const bank = row.bank || row.bank_code;
+    const service = row.service || row.service_name;
+    const status = row.status || row.quality;
+    if(bank && service && state[bank] && state[bank][service] && status){
+      state[bank][service] = { status, last_updated: row.last_updated || new Date().toISOString() };
+      updated++;
+    } else {
+      skipped++;
+    }
+  });
+
+  importOverlay.classList.remove('open');
+  renderTable();
+  showToast(`${updated} مورد به‌روزرسانی شد${skipped ? ` — ${skipped} مورد نامعتبر بود` : ""}`, updated > 0);
+});
+
+/* ============ HISTORY MODAL ============ */
+const historyOverlay = document.getElementById('historyOverlay');
+
+function relTimeShort(iso){
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return "";
+  return d.toLocaleString('en-GB', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+
+async function renderHistoryList(){
+  const listEl = document.getElementById('historyList');
+  listEl.innerHTML = `<div class="history-empty">در حال بارگذاری...</div>`;
+  const items = await getAllHistory();
+
+  if(items.length === 0){
+    listEl.innerHTML = `<div class="history-empty">هنوز هیچ تغییری ثبت نشده</div>`;
+    return;
+  }
+
+  listEl.innerHTML = items.map(item => {
+    const fromLabel = item.from ? statusLabel(item.from) : "—";
+    const toLabel = statusLabel(item.to);
+    return `
+      <div class="history-item">
+        <span class="h-bank">${bankName(item.bank)}</span>
+        <span class="h-service">${item.service}</span>
+        <span class="h-transition">${fromLabel} → ${toLabel}</span>
+        <span class="h-time">${relTimeShort(item.at)}</span>
+      </div>
+    `;
+  }).join("");
+}
+
+document.getElementById('historyBtn').addEventListener('click', () => {
+  historyOverlay.classList.add('open');
+  renderHistoryList();
+});
+document.getElementById('closeHistory').addEventListener('click', () => historyOverlay.classList.remove('open'));
+historyOverlay.addEventListener('click', (e) => { if(e.target === historyOverlay) historyOverlay.classList.remove('open'); });
+
+document.getElementById('clearHistoryBtn').addEventListener('click', async () => {
+  await clearHistory();
+  renderHistoryList();
+  showToast("تاریخچه پاک شد", true);
+});
+
+/* ============ INIT ============ */
+renderTable();
+// تلاش برای سینک خودکار با وضعیت واقعی موقع باز شدن صفحه (اگه accessCode کامل باشه)
+if(CONFIG.accessCode && CONFIG.accessCode.length >= 10){
+  setTimeout(syncRealStatus, 600);
+}
+</script>
+
+</body>
+</html>
