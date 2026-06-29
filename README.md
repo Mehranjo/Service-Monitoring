@@ -1,4 +1,4 @@
-# Direct Debit Service Status Dashboard
+# Service Status Dashboard
 
 A lightweight monitoring and control dashboard for Direct Debit banking services (Pay / Create). View real-time status (Stable / Unstable / Inaccessible) across multiple banks and change statuses — individually or in bulk — without needing tools like Postman.
 
